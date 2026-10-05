@@ -92,20 +92,16 @@ def telegram(method, data=None):
 def main_menu():
     return {
         "inline_keyboard": [
-            [
-                {"text": "🔮 Horoscope", "callback_data": "horoscope"},
-                {"text": "📈 Analyse V50", "callback_data": "v50"},
-            ],
-            [
-                {"text": "🧠 Assistant IA", "callback_data": "ai"},
-            ],
-            [
-                {"text": "👤 Mon profil", "callback_data": "profile"},
-                {"text": "ℹ️ Aide", "callback_data": "help"},
-            ],
+            [{"text": "🔮 Horoscope", "callback_data": "horoscope"}],
+            [{"text": "📈 Analyse V50", "callback_data": "v50"}],
+            [{"text": "👤 Mon profil", "callback_data": "profile"}],
+            [{"text": "ℹ️ Aide", "callback_data": "help"}],
+            [{"text": "⚙️ Paramètres", "callback_data": "settings"}],
+            [{"text": "🔄 Changer mon signe", "callback_data": "change_sign"}],
+            [{"text": "🗑️ Effacer ma mémoire IA", "callback_data": "clear_memory"}],
+            [{"text": "💝 Faire un Don au Koloina DIGITAL", "callback_data": "donate"}],
         ]
     }
-
 
 def sign_keyboard():
     buttons = []
@@ -398,6 +394,17 @@ def daily_scheduler():
         time.sleep(20)
 
 
+
+def setup_telegram_menu():
+    telegram("setChatMenuButton", {
+        "menu_button": {
+            "type": "web_app",
+            "text": "Menu",
+            "web_app": {
+                "url": "https://koloina-telegram-menu.onrender.com"
+            }
+        }
+    })
 
 def run():
     init_db()
