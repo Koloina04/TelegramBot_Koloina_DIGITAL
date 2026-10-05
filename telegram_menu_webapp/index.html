@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koloina DIGITAL</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #0f1115;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .menu {
+            width: 100%;
+            background: #181b21;
+            border-radius: 22px 22px 0 0;
+            padding: 18px 16px 24px;
+            box-shadow: 0 -8px 30px rgba(0,0,0,.35);
+        }
+
+        .handle {
+            width: 42px;
+            height: 4px;
+            background: #555b66;
+            border-radius: 10px;
+            margin: 0 auto 18px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 14px;
+            padding: 16px 10px;
+            background: #242832;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(.97);
+            background: #303540;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="menu">
+        <div class="handle"></div>
+
+        <div class="title">Koloina DIGITAL</div>
+
+        <div class="buttons">
+            <button>🔮 Horoscope</button>
+            <button>📈 Analyse V50</button>
+            <button>👤 Mon profil</button>
+            <button>ℹ️ Aide</button>
+            <button>⚙️ Paramètres</button>
+            <button>🔄 Changer mon signe</button>
+            <button>🗑️ Effacer ma mémoire IA</button>
+            <button>💝 Faire un Don</button>
+        </div>
+    </div>
+
+</body>
+</html>
