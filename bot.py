@@ -6,6 +6,7 @@ from gemini_api import generate_text
 import sqlite3
 import threading
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
@@ -314,11 +315,90 @@ MESSAGE DE L'UTILISATEUR :
     return generate_text(prompt).strip()
 
 
+def send_daily_horoscopes():
+    """
+    Envoie l'horoscope quotidien à tous les utilisateurs enregistrés.
+    Un horoscope est généré une seule fois par signe et par jour.
+    horoscope_sends empêche les doubles envois.
+    """
+    init_db()
+
+    today = datetime.now(
+        ZoneInfo("Indian/Antananarivo")
+    ).strftime("%d/%m/%Y")
+
+    conn = sqlite3.connect(DB)
+
+    users = conn.execute("""
+        SELECT telegram_id, sign
+        FROM users
+        WHERE sign IS NOT NULL AND sign != ''
+    """).fetchall()
+
+    conn.close()
+
+    if not users:
+        print("ℹ️ Aucun utilisateur enregistré pour l'horoscope quotidien.")
+        return
+
+    horoscopes = {}
+
+    for telegram_id, sign in users:
+        try:
+            if sign not in horoscopes:
+                horoscopes[sign] = get_horoscope(sign)
+
+            conn = sqlite3.connect(DB)
+
+            already_sent = conn.execute("""
+                SELECT 1
+                FROM horoscope_sends
+                WHERE date = ? AND telegram_id = ?
+            """, (today, telegram_id)).fetchone()
+
+            if already_sent:
+                conn.close()
+                continue
+
+            send_message(
+                telegram_id,
+                horoscopes[sign]
+            )
+
+            conn.execute("""
+                INSERT INTO horoscope_sends
+                (date, telegram_id)
+                VALUES (?, ?)
+            """, (today, telegram_id))
+
+            conn.commit()
+            conn.close()
+
+            print(
+                f"✅ Horoscope {today} envoyé à "
+                f"{telegram_id} ({sign})"
+            )
+
+        except Exception as e:
+            print(
+                f"❌ Erreur horoscope pour "
+                f"{telegram_id} ({sign}) : {e}"
+            )
+
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+
+
 def daily_scheduler():
     last_run_date = None
 
     while True:
-        now = datetime.now()
+        now = datetime.now(
+            ZoneInfo("Indian/Antananarivo")
+        )
         today = now.strftime("%d/%m/%Y")
 
         if now.hour == 4 and now.minute == 0 and last_run_date != today:

@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from gemini_api import generate_text
 
 DB = "bot.db"
@@ -103,7 +104,7 @@ ANCIENS HOROSCOPES À ÉVITER :
 def get_horoscope(sign):
     init_horoscope_db()
 
-    today = datetime.now().strftime("%d/%m/%Y")
+    today = datetime.now(ZoneInfo("Indian/Antananarivo")).strftime("%d/%m/%Y")
 
     conn = sqlite3.connect(DB)
 
