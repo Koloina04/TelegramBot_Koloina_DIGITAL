@@ -8,6 +8,7 @@ import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from v50_smc import analyze_v50
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 if not BOT_TOKEN:
@@ -94,13 +95,13 @@ def main_menu():
     return {
         "inline_keyboard": [
             [{"text": "🔮 Horoscope", "callback_data": "horoscope"}],
-            [{"text": "📈 Analyse V50", "callback_data": "v50"}],
+            [{"text": "📈 Analyse Volatility 50 Index", "callback_data": "v50"}],
             [{"text": "👤 Mon profil", "callback_data": "profile"}],
-            [{"text": "ℹ️ Aide", "callback_data": "help"}],
+            [{"text": "♻️ Changer mon signe", "callback_data": "change_sign"}],
+            [{"text": "💬 Historique des chats", "callback_data": "chat_history"}],
             [{"text": "⚙️ Paramètres", "callback_data": "settings"}],
-            [{"text": "🔄 Changer mon signe", "callback_data": "change_sign"}],
-            [{"text": "🗑️ Effacer ma mémoire IA", "callback_data": "clear_memory"}],
-            [{"text": "💝 Faire un Don au Koloina DIGITAL", "callback_data": "donate"}],
+            [{"text": "ℹ️ Aide", "callback_data": "help"}],
+            [{"text": "💝 Donate", "callback_data": "donate"}],
         ]
     }
 
@@ -215,9 +216,57 @@ def handle_update(update):
         if data == "v50":
             send_message(
                 chat_id,
-                "📈 Analyse Volatility 50\n\n"
-                "⏳ Le moteur SMC V50 sera connecté ici."
+                "📈 Analyse Volatility 50 Index\n\n"
+                "⏳ Analyse SMC en cours..."
             )
+
+            try:
+                analysis = analyze_v50()
+                signal = analysis.get("signal")
+
+                if signal is None:
+                    message = (
+                        "📈 ANALYSE VOLATILITY 50 INDEX\n"
+                        "━━━━━━━━━━━━━━━━━━━━\n\n"
+                        "⚪ Aucun signal SMC confirmé actuellement.\n\n"
+                        f"💰 Prix actuel : {analysis.get('price')}\n"
+                        f"📊 H1 : {analysis['H1']['trend']}\n"
+                        f"📊 M15 : {analysis['M15']['trend']}\n"
+                        f"📊 M5 : {analysis['M5']['trend']}\n\n"
+                        "⏳ Le marché est surveillé.\n\n"
+                        "⚠️ Analyse technique uniquement."
+                    )
+                else:
+                    direction = signal["direction"]
+                    emoji = "\U0001f7e2 BUY" if direction == "BUY" else "\U0001f534 SELL"
+
+                    message = (
+                        "📈 ANALYSE VOLATILITY 50 INDEX\n"
+                        "━━━━━━━━━━━━━━━━━━━━\n\n"
+                        f"🎯 Signal : {emoji}\n"
+                        f"💰 Entrée : {signal['entry']}\n"
+                        f"🛑 Stop Loss : {signal['sl']}\n"
+                        f"🎯 TP1 : {signal['tp1']}\n"
+                        f"🎯 TP2 : {signal['tp2']}\n"
+                        f"🎯 TP3 : {signal['tp3']}\n\n"
+                        f"📊 H1 : {signal['h1_trend']}\n"
+                        f"📊 M15 : {signal['m15_trend']}\n"
+                        f"📍 Zone : {signal['m15_zone']}\n"
+                        f"🔎 M5 : {signal['m5_trend']}\n"
+                        f"✅ Confirmation : {', '.join(signal['confirmations'])}\n\n"
+                        "⚠️ Analyse technique uniquement."
+                    )
+
+                send_message(chat_id, message)
+
+            except Exception as e:
+                print(f"❌ Erreur analyse V50 : {e}")
+                send_message(
+                    chat_id,
+                    "❌ Impossible de récupérer l'analyse "
+                    "Volatility 50 actuellement."
+                )
+
             return
 
         if data == "ai":
@@ -226,6 +275,61 @@ def handle_update(update):
                 "🧠 Assistant IA activé.\n\n"
                 "Écrivez simplement votre message, "
                 "je vous répondrai naturellement."
+            )
+            return
+
+        if data == "change_sign":
+            send_message(
+                chat_id,
+                "♻️ CHANGER MON SIGNE\n\n"
+                "Choisis ton nouveau signe astrologique :",
+                sign_keyboard()
+            )
+            return
+
+        if data == "chat_history":
+            history = get_chat_history(user_id, limit=20)
+
+            if not history:
+                send_message(
+                    chat_id,
+                    "💬 HISTORIQUE DES CHATS\n\n"
+                    "Aucun historique disponible."
+                )
+                return
+
+            lines = ["💬 HISTORIQUE DES CHATS", "━━━━━━━━━━━━━━━━━━━━", ""]
+            for item in history:
+                role = "👤 Vous" if item["role"] == "user" else "🤖 Bot"
+                content = item["content"].strip()
+                lines.append(f"{role} : {content}")
+                lines.append("")
+
+            send_message(chat_id, "\n".join(lines))
+            return
+
+        if data == "settings":
+            send_message(
+                chat_id,
+                "⚙️ PARAMÈTRES\n\n"
+                "Les paramètres disponibles seront ajoutés progressivement.\n\n"
+                "♻️ Pour modifier ton signe, utilise « Changer mon signe »."
+            )
+            return
+
+        if data == "donate":
+            send_message(
+                chat_id,
+                "💝 DONATE — KOLOINA DIGITAL\n"
+                "━━━━━━━━━━━━━━━━━━━━\n\n"
+                "Merci pour ton soutien ! 🙏❤️\n\n"
+                "₿ BTC\n"
+                "1EpGDUQpv5DTDAgmneVq2x9ddih8qKP6JU\n\n"
+                "🔺 TRC20\n"
+                "TLW6UDMDAy7yjyKhS1pCt4uPbGxVnxox3z\n\n"
+                "BEP20\n"
+                "0x63f850e6f470e31f83786ff6a5f17d0bd2ffa3ea\n\n"
+                "⚠️ Vérifie toujours le réseau avant d'envoyer une donation."
             )
             return
 
@@ -454,25 +558,186 @@ def send_daily_horoscopes():
 
 
 
-def daily_scheduler():
-    last_run_date = None
+def get_all_users():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
 
+    cursor.execute(
+        "SELECT telegram_id FROM users"
+    )
+
+    users = [
+        {"telegram_id": row[0]}
+        for row in cursor.fetchall()
+    ]
+
+    conn.close()
+    return users
+
+
+def send_daily_v50_analysis():
+    analysis = analyze_v50()
+    signal = analysis.get("signal")
+
+    users = get_all_users()
+
+    if not users:
+        print("📈 Analyse V50 quotidienne : aucun utilisateur.")
+        return
+
+    if signal is None:
+        message = (
+            "📈 ANALYSE QUOTIDIENNE — VOLATILITY 50 INDEX\n"
+            "━━━━━━━━━━━━━━━━━━━━\n\n"
+            "⚪ Aucun signal SMC confirmé actuellement.\n\n"
+            f"💰 Prix actuel : {analysis.get('price')}\n"
+            f"📊 H1 : {analysis['H1']['trend']}\n"
+            f"📊 M15 : {analysis['M15']['trend']}\n"
+            f"📊 M5 : {analysis['M5']['trend']}\n\n"
+            "⏳ Le marché est surveillé.\n\n"
+            "⚠️ Analyse technique uniquement."
+        )
+    else:
+        direction = signal["direction"]
+        emoji = "\U0001f7e2 BUY" if direction == "BUY" else "\U0001f534 SELL"
+
+        message = (
+            "📈 ANALYSE QUOTIDIENNE — VOLATILITY 50 INDEX\n"
+            "━━━━━━━━━━━━━━━━━━━━\n\n"
+            f"🎯 Signal : {emoji}\n"
+            f"💰 Entrée : {signal['entry']}\n"
+            f"🛑 Stop Loss : {signal['sl']}\n"
+            f"🎯 TP1 : {signal['tp1']}\n"
+            f"🎯 TP2 : {signal['tp2']}\n"
+            f"🎯 TP3 : {signal['tp3']}\n\n"
+            f"📊 H1 : {signal['h1_trend']}\n"
+            f"📊 M15 : {signal['m15_trend']}\n"
+            f"📍 Zone : {signal['m15_zone']}\n"
+            f"🔎 M5 : {signal['m5_trend']}\n"
+            f"✅ Confirmation : {', '.join(signal['confirmations'])}\n\n"
+            "⚠️ Analyse technique uniquement."
+        )
+
+    sent = 0
+
+    for user in users:
+        try:
+            send_message(user["telegram_id"], message)
+            sent += 1
+        except Exception as e:
+            print(
+                f"❌ Erreur envoi V50 à "
+                f"{user['telegram_id']} : {e}"
+            )
+
+    print(f"📈 Analyse V50 quotidienne envoyée à {sent} utilisateur(s).")
+
+
+def daily_scheduler():
     while True:
         now = datetime.now(
             ZoneInfo("Indian/Antananarivo")
         )
+
         today = now.strftime("%d/%m/%Y")
 
-        if now.hour == 4 and now.minute == 0 and last_run_date != today:
-            try:
-                send_daily_horoscopes()
-            except Exception as e:
-                print(f"❌ Erreur scheduler horoscope : {e}")
+        try:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
 
-            last_run_date = today
+            cursor.execute(
+                "CREATE TABLE IF NOT EXISTS scheduler_runs ("
+                "task TEXT NOT NULL, "
+                "date TEXT NOT NULL, "
+                "PRIMARY KEY(task, date)"
+                ")"
+            )
+
+            conn.commit()
+            conn.close()
+
+            # 🔮 Horoscope quotidien à partir de 04:00
+            if now.hour >= 4:
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    "SELECT 1 FROM scheduler_runs "
+                    "WHERE task = ? AND date = ?",
+                    ("horoscope", today)
+                )
+
+                already_done = cursor.fetchone()
+                conn.close()
+
+                if not already_done:
+                    try:
+                        send_daily_horoscopes()
+
+                        conn = sqlite3.connect(DB_PATH)
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "INSERT OR IGNORE INTO scheduler_runs "
+                            "(task, date) VALUES (?, ?)",
+                            ("horoscope", today)
+                        )
+                        conn.commit()
+                        conn.close()
+
+                        print(
+                            "🔮 Horoscope quotidien envoyé — "
+                            f"{today}"
+                        )
+
+                    except Exception as e:
+                        print(
+                            f"❌ Erreur envoi horoscope : {e}"
+                        )
+
+            # 📈 Analyse V50 quotidienne à partir de 05:00
+            if now.hour >= 5:
+                conn = sqlite3.connect(DB_PATH)
+                cursor = conn.cursor()
+
+                cursor.execute(
+                    "SELECT 1 FROM scheduler_runs "
+                    "WHERE task = ? AND date = ?",
+                    ("v50", today)
+                )
+
+                already_done = cursor.fetchone()
+                conn.close()
+
+                if not already_done:
+                    try:
+                        send_daily_v50_analysis()
+
+                        conn = sqlite3.connect(DB_PATH)
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "INSERT OR IGNORE INTO scheduler_runs "
+                            "(task, date) VALUES (?, ?)",
+                            ("v50", today)
+                        )
+                        conn.commit()
+                        conn.close()
+
+                        print(
+                            "📈 Analyse V50 quotidienne envoyée — "
+                            f"{today}"
+                        )
+
+                    except Exception as e:
+                        print(
+                            f"❌ Erreur envoi V50 : {e}"
+                        )
+
+        except Exception as e:
+            print(
+                f"❌ Erreur scheduler : {e}"
+            )
 
         time.sleep(20)
-
 
 
 def setup_telegram_menu():
@@ -495,7 +760,7 @@ def run():
     )
     scheduler_thread.start()
 
-    print("🔮 Scheduler horoscope quotidien actif — 04:00 (heure Madagascar)")
+    print("🔮 Horoscope quotidien : 04:00 | 📈 Analyse V50 : 05:00 (heure Madagascar)")
     print("🤖 Koloina DIGITAL Bot démarré.")
 
     offset = None
