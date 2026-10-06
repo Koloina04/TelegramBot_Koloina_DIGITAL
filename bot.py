@@ -32,6 +32,7 @@ SIGNS = [
 ]
 
 DB = "bot.db"
+DB_PATH = DB
 
 def init_db():
     conn = sqlite3.connect(DB)
